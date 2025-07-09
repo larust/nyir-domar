@@ -2,7 +2,11 @@
 import os
 import re
 import requests
+import csv
+import json
+import collections
 import pandas as pd
+from pathlib import Path
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse, urljoin
 
@@ -96,7 +100,8 @@ def get_decision_links() -> list[str]:
 
 
 def main():
-    csv_file = "data/allir_domar_og_akvardanir.csv"
+    csv_file = Path("data/allir_domar_og_akvardanir.csv")
+    json_file = Path("data/mapping_d_og_a.json")
     cols = [
         "supreme_case_number",
         "supreme_case_link",
@@ -143,6 +148,38 @@ def main():
     added = len(df_combined) - len(df_existing)
     print(f"Done → {csv_file} ({added} new rows, total {len(df_combined)})")
 
+    # 1) Read and strip whitespace on all string columns
+    df = pd.read_csv(csv_file, encoding="utf-8-sig", dtype=str)
+    df.loc[df['appeals_case_link'].isnull(),'appeals_case_link'] = ''
+    for col in df.select_dtypes(include="object"):
+        df[col] = df[col].str.strip()
+
+    # 2) Build the mapping in one go, no groupby.apply
+    mapping = {
+        appeals_num: (
+            # single-record → just the dict
+            group.drop(columns="appeals_case_number")
+                .to_dict(orient="records")[0]
+            if len(group) == 1
+            # multi-record → list of dicts
+            else group.drop(columns="appeals_case_number")
+                    .to_dict(orient="records")
+        )
+        for appeals_num, group in df.groupby("appeals_case_number")
+    }
+
+    # 3) Write JSON
+    json_file.write_text(
+        json.dumps(mapping, ensure_ascii=False, indent=2),
+        encoding="utf-8"
+    )
+
+    # 4) Print summary
+    total = sum(
+        1 if not isinstance(v, list) else len(v)
+        for v in mapping.values()
+    )
+    print(f"Wrote {json_file} with {total:,} verdict links")
 
 if __name__ == "__main__":
     main()
