@@ -1,21 +1,13 @@
 import os
 import re
 import requests
-import csv
 import json
-import collections
 import pandas as pd
 from pathlib import Path
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse, urljoin
 
-HEADERS = {
-    "User-Agent": (
-        "Mozilla/5.0 (X11; Linux x86_64) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) "
-        "Chrome/126.0.0.0 Safari/537.36"
-    )
-}
+HEADERS = {"User-Agent": ( "Mozilla/5.0 (X11; Linux x86_64) ")}
 
 # New Supreme Court case-number pattern, e.g. "2025-106"
 SUPREME_RE = re.compile(r"\b(\d{4}-\d+)\b")
