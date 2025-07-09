@@ -20,6 +20,7 @@ HEADERS = {
 # New Supreme Court case-number pattern, e.g. "2025-106"
 SUPREME_RE = re.compile(r"\b(\d{4}-\d+)\b")
 
+
 # Appeals-court link & number patterns (unchanged)
 APPEALS_URL_RE = re.compile(
     r"https://landsrettur\.is/domar-og-urskurdir/domur-urskurdur/[^\s\"'<>]+"
